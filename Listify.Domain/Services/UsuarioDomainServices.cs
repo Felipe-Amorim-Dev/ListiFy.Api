@@ -14,12 +14,16 @@ namespace Listify.Domain.Services
     public class UsuarioDomainServices : IUsuarioDomainService
     {
         private readonly IUsuarioRepository? _usuarioRepository;
+        private readonly IItemRepository? _itemRepository;
+        private readonly IItemFotoRepository? _itemFotoRepository;
         private readonly ITokenSecurity? _tokenSecurity;
 
-        public UsuarioDomainServices(IUsuarioRepository? usuarioRepository, ITokenSecurity? tokenSecurity)
+        public UsuarioDomainServices(IUsuarioRepository? usuarioRepository, ITokenSecurity? tokenSecurity, IItemRepository? itemRepository, IItemFotoRepository? itemFotoRepository)
         {
             _usuarioRepository = usuarioRepository;
             _tokenSecurity = tokenSecurity;
+            _itemRepository = itemRepository;
+            _itemFotoRepository = itemFotoRepository;
         }
 
         public async Task<Usuario> AtualizarDados(string? email, string nome, string sobrenome, string telefone, byte[]? fotoPerfil)
@@ -141,7 +145,7 @@ namespace Listify.Domain.Services
             return usuario;
         }
 
-        public async Task<Guid> CriarContaUsuario(Usuario usuario)
+        public async Task CriarContaUsuario(Usuario usuario)
         {
             if(await _usuarioRepository?.GetAsync(usuario.Email) != null)
             {
@@ -150,9 +154,52 @@ namespace Listify.Domain.Services
 
             usuario.Senha = MD5Helper.Encrypt(usuario.Senha);
 
-            await _usuarioRepository?.CreateAsync(usuario);
+            await _usuarioRepository?.CreateAsync(usuario);            
+        }
 
-            return usuario.Id.Value;
+        public async Task<Usuario> GetUsuario(string email)
+        {
+            var usuario = await _usuarioRepository?.GetAsync(email);
+
+            var usuarioEmail = usuario.Equals(usuario.Email == email);                 
+
+            if (email == null)
+            {
+                throw new ApplicationException("Usuário não encontrado.");
+            }
+
+            return usuario;
+        }
+
+        public async Task DeletarUsuario(Guid usuarioID)
+        {
+            var usuario = await _usuarioRepository?.GetByIdAsync(usuarioID);            
+
+            if (usuario != null)
+            {
+                var items = await _itemRepository?.GetAllAsync();
+                var itemUsuario = items.Where(i => i.UsuarioID == usuarioID).ToList();
+
+                foreach (var item in itemUsuario)
+                {
+                    var fotos = await _itemFotoRepository?.GetAllAsync();
+                    var fotosItem = fotos.Where(f => f.ItemId == item.Id).ToList();
+
+                    foreach (var foto in fotosItem)
+                    {
+                        await _itemFotoRepository.DeleteAsync(foto);
+                    }
+
+                    await _itemRepository.DeleteAsync(item);
+                }
+
+                await _usuarioRepository.DeleteAsync(usuario);                
+            }
+            else
+            {
+                throw new ApplicationException("Usuário não encontrado.");
+            }
+            
         }
     }
 }

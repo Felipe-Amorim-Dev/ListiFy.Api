@@ -20,11 +20,12 @@ namespace Listify.Infra.Data.Mappings
             builder.Property(i => i.Titulo).HasColumnName("TITULO").HasMaxLength(100).IsRequired();
             builder.Property(i => i.Descricao).HasColumnName("DESCRICAO").HasMaxLength(200).IsRequired();
             builder.Property(i => i.Categoria).HasColumnName("CATEGORIA").HasMaxLength(50).IsRequired();
-            builder.Property(i => i.Tipo).HasColumnName("TIPO").HasMaxLength(50).IsRequired();
+            builder.Property(i => i.Tipo).HasColumnName("TIPO").HasMaxLength(50).IsRequired();            
             builder.Property(i => i.DataLancamento).HasColumnName("DATALANCAMENTO");
             builder.Property(i => i.DataCriacao).HasColumnName("DATACRIACAO").IsRequired();            
 
             builder.HasOne(i => i.Usuario).WithMany(u => u.Items).HasForeignKey(i => i.UsuarioID);
+            builder.HasMany(i => i.Galeria).WithOne(f => f.Item).HasForeignKey(f => f.ItemId);
         }
     }
 }

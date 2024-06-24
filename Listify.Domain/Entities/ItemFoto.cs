@@ -11,8 +11,8 @@ namespace Listify.Domain.Entities
         #region Atributos
         private Guid? _id;
         private byte[]? _foto;
-        private Guid? _itemId;
         private Item? _item;
+        private Guid? _itemId;        
         #endregion
 
         #region Métodos

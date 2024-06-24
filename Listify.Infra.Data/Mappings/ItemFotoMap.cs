@@ -18,8 +18,8 @@ namespace Listify.Infra.Data.Mappings
             builder.HasKey(f => f.Id);
             builder.Property(f => f.Id).HasColumnName("ID");
             builder.Property(f => f.Foto).HasColumnName("FOTO");
-
-            builder.HasOne(f => f.Item).WithMany(i => i.Galeria).HasForeignKey(f => f.ItemId);
+            
+            builder.HasOne(f => f.Item).WithMany(i => i.Galeria).HasForeignKey(f => f.ItemId).OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

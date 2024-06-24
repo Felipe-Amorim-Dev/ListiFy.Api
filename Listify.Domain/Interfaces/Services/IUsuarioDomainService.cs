@@ -9,7 +9,7 @@ namespace Listify.Domain.Interfaces.Services
 {
     public interface IUsuarioDomainService
     {
-        Task<Guid> CriarContaUsuario(Usuario usuario);
+        Task CriarContaUsuario(Usuario usuario);
 
         Task<Usuario> Autenticar(string email, string senha);
 
@@ -24,5 +24,9 @@ namespace Listify.Domain.Interfaces.Services
         Task<Usuario> AtualizarSenha(string? email, string senha);
 
         Task<Usuario> AtualizarEmail(string? email, string novoEmail);
+
+        Task<Usuario> GetUsuario(string? email);
+
+        Task DeletarUsuario(Guid usuarioID);
     }
 }

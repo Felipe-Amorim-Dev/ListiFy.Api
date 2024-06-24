@@ -1,35 +1,54 @@
-﻿using Listify.Application.Interfaces;
-using Listify.Application.Models.AtualizarItem;
-using Listify.Application.Models.CadastrarItem;
-using Listify.Application.Models.ConsultarItems;
-using Listify.Application.Models.CriarContaUsuario;
-using Listify.Application.Models.RemoverItem;
-using Listify.Domain.Entities;
+﻿using Listify.Domain.Entities;
+using Listify.Domain.Interfaces.Repositories;
+using Listify.Domain.Interfaces.Services;
+using Listify.Services.Models.AtualizarItem;
+using Listify.Services.Models.CadastrarItem;
+using Listify.Services.Models.ConsultarItemById;
+using Listify.Services.Models.ConsultarItems;
+using Listify.Services.Models.RemoverItem;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
 
 namespace Listify.Services.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class ListifyItemController : ControllerBase
-    {
-        private readonly IListifyAppService _listifyAppService;
+    {        
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IItemFotoRepository _itemFotoRepository;
+        private readonly IItemDomainService _itemDomainService;
+        private readonly IUsuarioRepository _usuarioRepository;
 
-        public ListifyItemController(IListifyAppService listifyAppService, IWebHostEnvironment webHostEnvironment)
+        public ListifyItemController(IWebHostEnvironment webHostEnvironment, IItemFotoRepository itemFotoRepository, IItemDomainService itemDomainService, IUsuarioRepository usuarioRepository)
         {
-            _listifyAppService = listifyAppService;
             _webHostEnvironment = webHostEnvironment;
+            _itemFotoRepository = itemFotoRepository;
+            _itemDomainService = itemDomainService;
+            _usuarioRepository = usuarioRepository;
         }
 
         [Route("cadastrar-item")]
         [HttpPost]
         [ProducesResponseType(typeof(CadastrarItemResponseModel), 200)]
-        public async Task<IActionResult> CadastrarItem([FromForm] CadastrarItemRequestModel model, List<IFormFile> galeria)
+        public async Task<IActionResult> CadastrarItem([FromForm] CadastrarItemRequestModel model, Guid usuarioID, List<IFormFile> galeria)
         {
             try
-            {
-                model.Galeria = new List<ItemFoto>();
+            {                
+                var item = new Item
+                {
+                    UsuarioID = usuarioID,
+                    Id = Guid.NewGuid(),
+                    Titulo = model.Titulo,
+                    Descricao = model.Descricao,
+                    Categoria = model.Categoria,
+                    Tipo = model.Tipo,
+                    DataLancamento = model.DataLancamento,
+                    DataCriacao = DateTime.Now,
+                    Galeria = new List<ItemFoto>()
+                };
+
+                await _itemDomainService?.CadastrarItem(item, usuarioID);
 
                 foreach (var file in galeria)
                 {
@@ -37,15 +56,24 @@ namespace Listify.Services.Controllers
                     {
                         await file.CopyToAsync(memoryStream);
                         var itemFoto = new ItemFoto
-                        {                            
+                        {
+                            Id = Guid.NewGuid(),
+                            ItemId = item.Id,
                             Foto = memoryStream.ToArray()
                         };
-                        model.Galeria.Add(itemFoto);
+                        item.Galeria.Add(itemFoto);
+
+                        await _itemFotoRepository.CreateAsync(itemFoto);
                     }
                 }
 
+                var response = new CadastrarItemResponseModel
+                {                    
+                    Titulo = item.Titulo,
+                    DataCriacao = item.DataCriacao,
+                    Galeria = item.Galeria
+                };
 
-                var response = await _listifyAppService?.CadastrarItem(model);
                 return StatusCode(200, response);
             }
             catch (ApplicationException e)
@@ -61,10 +89,12 @@ namespace Listify.Services.Controllers
         [Route("atualizar-item")]
         [HttpPut]
         [ProducesResponseType(typeof(AtualizarItemResponseModel), 200)]
-        public async Task<IActionResult> AtualizarItem([FromForm] AtualizarItemRequestModel model, List<IFormFile> galeria)
+        public async Task<IActionResult> AtualizarItem([FromForm] AtualizarItemRequestModel model, Guid usuarioID, Guid itemId, List<IFormFile> galeria)
         {
             try
-            {                
+            {
+                var item = new Item();
+
                 model.Galeria = new List<ItemFoto>();
 
                 foreach (var file in galeria)
@@ -80,8 +110,12 @@ namespace Listify.Services.Controllers
                     }
                 }
 
+                var response = new AtualizarItemResponseModel
+                {
+                    DataAlteracao = DateTime.Now
+                };
 
-                var response = await _listifyAppService?.AtualizarItem(model, model.Titulo);
+                await _itemDomainService?.AtualizarItem(item, usuarioID, itemId, model.Titulo, model.Descricao, model.Categoria, model.Tipo, model.Galeria);
                 return StatusCode(200, response);
             }
             catch (ApplicationException e)
@@ -97,11 +131,11 @@ namespace Listify.Services.Controllers
         [Route("remover-item")]
         [HttpDelete]
         [ProducesResponseType(typeof(RemoverItemResponseModel), 200)]
-        public async Task<IActionResult> RemoverItem([FromForm] RemoverItemRequestModel model)
+        public async Task<IActionResult> RemoverItem([FromForm] RemoverItemRequestModel model, Guid usuarioID)
         {
             try
             {                
-                var response = await _listifyAppService?.RemoverItem(model, model.Titulo);
+                var response = await _itemDomainService?.DeletarItem(model.Titulo, usuarioID);
                 return StatusCode(200, response);
             }
             catch (ApplicationException e)
@@ -117,12 +151,93 @@ namespace Listify.Services.Controllers
         [Route("consultar-item")]
         [HttpGet]
         [ProducesResponseType(typeof(ConsultarItemsResponseModel), 200)]
-        public async Task<IActionResult> ConsultarItems([FromForm] ConsultarItemsRequestModel model)
+        public async Task<IActionResult> ConsultarItems([FromQuery] Guid usuarioID)
+        {
+            try
+            {   
+                var response = await _itemDomainService?.ConsultarItems(usuarioID);
+                return StatusCode(200, response);
+            }
+            catch (ApplicationException e)
+            {
+                return StatusCode(400, new { e.Message });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new { e.Message });
+            }
+        }
+
+        [Route("consultar-item-id")]
+        [HttpGet]
+        [ProducesResponseType(typeof(ConsultarItemByIdResponseModel), 200)]
+        public async Task<IActionResult> ConsultarItemById(Guid usuarioId, Guid itemId)
         {
             try
             {
-                var response = await _listifyAppService?.ConsultarItems(model);
+                var item = await _itemDomainService?.ConsultarItemById(usuarioId, itemId);
+
+                if (item == null)
+                {
+                    return NotFound(new { Message = "Item não encontrado." });
+                }
+
+                var response = new ConsultarItemByIdResponseModel
+                {
+                    Titulo = item.Titulo,
+                    Descricao = item.Descricao,
+                    Categoria = item.Categoria,
+                    Tipo = item.Tipo,
+                    DataLancamento = item.DataLancamento,
+                    Galeria = item.Galeria?.ToList()                    
+                };
+
                 return StatusCode(200, response);
+                
+            }
+            catch (ApplicationException e)
+            {
+                return StatusCode(400, new { e.Message });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new { e.Message });
+            }
+        }
+
+        [Route("deletar-foto")]
+        [HttpDelete]
+        [ProducesResponseType(typeof(AtualizarItemResponseModel), 200)]
+        public async Task<IActionResult> DeletarFoto(Guid itemId, Guid fotoId)
+        {
+            try
+            {
+               await _itemDomainService?.DeletarFoto(itemId, fotoId);                
+
+               return StatusCode(200, new { Message = $"Foto {fotoId} deletada com sucesso." });
+
+            }
+            catch (ApplicationException e)
+            {
+                return StatusCode(400, new { e.Message });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new { e.Message });
+            }
+        }
+
+        [Route("deletar-fotos")]
+        [HttpDelete]
+        [ProducesResponseType(typeof(AtualizarItemResponseModel), 200)]
+        public async Task<IActionResult> DeletarFotos(Guid itemId)
+        {
+            try
+            {
+                await _itemDomainService?.DeletarFotos(itemId);
+
+                return StatusCode(200, new { Message = "Galeria deletada com sucesso." });
+
             }
             catch (ApplicationException e)
             {

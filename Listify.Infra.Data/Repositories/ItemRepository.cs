@@ -1,7 +1,6 @@
 ﻿using Listify.Domain.Entities;
 using Listify.Domain.Interfaces.Repositories;
 using Listify.Infra.Data.Context;
-using Listify.Infra.Data.Migrations;
 using System;
 using System.Collections.Generic;
 using System.Linq;

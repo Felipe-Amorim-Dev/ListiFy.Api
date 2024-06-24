@@ -15,8 +15,8 @@ namespace Listify.Domain.Entities
         private string? _categoria;
         private string? _tipo;
         private DateTime? _dataLancamento;
-        private DateTime? _dataCriacao;        
-        private List<ItemFoto>? _galeria;
+        private DateTime? _dataCriacao;
+        private List<ItemFoto> _galeria;        
         private Guid? _usuarioID;
         private Usuario? _usuario;
         #endregion

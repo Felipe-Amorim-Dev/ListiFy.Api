@@ -1,11 +1,12 @@
 ﻿using Listify.Domain.Entities;
 using Listify.Domain.Interfaces.Services;
+using Listify.Domain.Services;
 using Listify.Services.Models.AtualizarDados;
-using Listify.Services.Models.AtualizarEmail;
 using Listify.Services.Models.AtualizarSenha;
 using Listify.Services.Models.Autenticar;
-using Listify.Services.Models.ConsultarUsuario;
 using Listify.Services.Models.CriarContaUsuario;
+using Listify.Services.Models.SendEmail;
+using Listify.Services.Models.Usuario;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,11 +19,13 @@ namespace Listify.Services.Controllers
     {        
         private readonly IUsuarioDomainService _usuarioDomainService;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly SendEmailDomainService _emailService;
 
-        public ListiFyUsuarioController(IUsuarioDomainService usuarioDomainService, IWebHostEnvironment webHostEnvironment)
+        public ListiFyUsuarioController(IUsuarioDomainService usuarioDomainService, IWebHostEnvironment webHostEnvironment, SendEmailDomainService emailService)
         {
             _usuarioDomainService = usuarioDomainService;
             _webHostEnvironment = webHostEnvironment;
+            _emailService = emailService;
         }
 
         [Route("criar-conta-usuario")]
@@ -41,24 +44,64 @@ namespace Listify.Services.Controllers
                     DataNascimento = model.DataNascimento,
                     Telefone = model.Telefone,
                     Senha = model.Senha,
-                    FotoPerfil = model.FotoPerfil,
                     DataCriacao = DateTime.Now
                 };
 
-                using (var memoryStream = new MemoryStream())
+                if (fotoPerfil != null)
                 {
-                    await fotoPerfil.CopyToAsync(memoryStream);
-                    model.FotoPerfil = memoryStream.ToArray();
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await fotoPerfil.CopyToAsync(memoryStream);
+                        usuario.FotoPerfil = memoryStream.ToArray();
+                    }
                 }
-
+                
                 await _usuarioDomainService.CriarContaUsuario(usuario);
 
                 var response = new CriarContaUsuarioResponseModel
                 {
                     Id = usuario.Id,
                     Nome = usuario.Nome,
-                    DataCriacao = usuario.DataCriacao
-                };                
+                    DataCriacao = usuario.DataCriacao                    
+                };
+
+                var sendEmailRequest = new SendEmailRequest
+                {
+                    ToEmail = usuario.Email,
+                    Subject = "ListiFy - Criação de conta."
+                };
+                
+                string htmlBody = $@"
+                <html>
+                   <head>
+                        <style>body {{font-family: 'Roboto', sans-serif;background-color: #f5f5f5;color: #2f2f2f;margin: 0;padding: 0;line-height: 1.6;}}.container {{width: 100%;max-width: 600px;margin: 0 auto;padding: 20px;background-color: #ffffff;border-radius: 8px;box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);}}.header {{text-align: center;padding: 20px 0;background-color: #07342C;border-radius: 8px 8px 0 0;}}.header h1 {{margin: 0;color: #ffffff;}}.content {{padding: 20px;}}.content h2 {{color: #07342C;}}.content p {{margin-bottom: 20px;}}.button {{display: inline-block;padding: 10px 20px;background-color: #FFAB07;color: #ffffff;text-decoration: none;border-radius: 5px;font-weight: bold;transition: background-color 0.3s ease;}}.button:hover {{background-color: #AD7301;}}.footer {{text-align: center;padding: 20px;background-color: #f5f5f5;color: #2f2f2f;font-size: 14px;border-radius: 0 0 8px 8px;}}
+                        </style>
+                   </head>
+    
+                   <body>
+                       <div class=""container"">
+                           <div class=""header"">
+                               <h1>Bem-vindo(a) ao ListiFy!</h1>
+                           </div>
+                           <div class=""content"">
+                               <h2>Olá, {usuario.Nome}!</h2>
+                               <p>Estamos muito felizes por você ter se juntado a nós. Sua conta foi criada com sucesso e agora você pode acessar todas as funcionalidades que o ListiFy tem a oferecer.</p>
+                               <p>Para começar, clique no botão abaixo e faça seu login:</p>
+                               <p>
+                                   <a href=""[URL de Login]"" class=""button"">Acessar Minha Conta</a>
+                               </p>
+                               <p>Obrigado por escolher o ListiFy!</p>
+                               <p>Essa é uma mensagem automática, Porfavor não responda.</p>
+                           </div>
+                           <div class=""footer"">
+                               <p>© 2024 ListiFy. Todos os direitos reservados.</p>
+                           </div>
+                       </div>
+                   </body>
+                </html>";
+
+
+                await _emailService.SendEmailAsync(sendEmailRequest.ToEmail, sendEmailRequest.Subject, htmlBody);
 
                 return StatusCode(200, response);
             }
@@ -85,11 +128,20 @@ namespace Listify.Services.Controllers
                     Senha = model.Senha
                 };
 
-                await _usuarioDomainService.Autenticar(model.Email, model.Senha);
+                 var usuario = await _usuarioDomainService.Autenticar(model.Email, model.Senha);
 
                 var response = new AutenticarResponseModel
                 {
-                    DataHoraAcesso = DateTime.Now                   
+                    Id = (Guid)usuario.Id,
+                    Nome = usuario.Nome,
+                    Sobrenome = usuario.Sobrenome,
+                    Email = usuario.Email,
+                    DataNascimento = usuario.DataNascimento,
+                    Telefone = usuario.Telefone,
+                    FotoPerfil = usuario.FotoPerfil,
+                    AccessToken = usuario.AccessToken,
+                    DataHoraAcesso = DateTime.Now,
+                    DataHoraExpiracao = DateTime.UtcNow.AddHours(2)
                 };
 
                 return StatusCode(200, response);
@@ -103,25 +155,14 @@ namespace Listify.Services.Controllers
                 return StatusCode(500, new { e.Message });
             }
         }
-
-        [Authorize]
+        
         [Route("atualizar-dados")]
         [HttpPut]
         [ProducesResponseType(typeof(AtualizarDadosResponseModel), 200)]
-        public async Task<IActionResult> AtualizarDados([FromForm] AtualizarDadosRequestModel model, IFormFile fotoPerfil)
-        {
+        public async Task<IActionResult> AtualizarDados([FromQuery] Guid usuarioID, [FromForm] AtualizarDadosRequestModel model, IFormFile? fotoPerfil)
+        {            
             try
-            {
-                var email = User.Identity.Name;
-
-                var usuario = new AtualizarDadosRequestModel
-                {
-                    Nome = model.Nome,
-                    Sobrenome = model.Sobrenome,
-                    Telefone = model.Telefone,
-                    FotoPerfil = model.FotoPerfil
-                };
-
+            {             
                 if (fotoPerfil != null)
                 {
                     using (var memoryStream = new MemoryStream())
@@ -131,13 +172,52 @@ namespace Listify.Services.Controllers
                     }
                 }
 
-                await _usuarioDomainService.AtualizarDados(email, usuario.Nome, usuario.Sobrenome, usuario.Telefone, usuario.FotoPerfil);
+                await _usuarioDomainService.AtualizarDados(usuarioID, model.Nome, model.Sobrenome, model.Email, model.Telefone, model.FotoPerfil);
 
                 var response = new AtualizarDadosResponseModel
                 {
                     DataHoraAlteracao = DateTime.Now
                 };
 
+                var sendEmailRequest = new SendEmailRequest
+                {
+                    ToEmail = model.Email,
+                    Subject = "ListiFy - Dados Atualizados."
+                };
+
+                string htmlBody = $@"
+               <html>
+                   <head>
+                        <style>body {{font-family: 'Roboto', sans-serif;background-color: #f5f5f5;color: #2f2f2f;margin: 0;padding: 0;line-height: 1.6;}}.container {{width: 100%;max-width: 600px;margin: 0 auto;padding: 20px;background-color: #ffffff;border-radius: 8px;box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);}}.header {{text-align: center;padding: 20px 0;background-color: #07342C;border-radius: 8px 8px 0 0;}}.header h1 {{margin: 0;color: #ffffff;}}.content {{padding: 20px;}}.content h2 {{color: #07342C;}}.content p {{margin-bottom: 20px;}}.button {{display: inline-block;padding: 10px 20px;background-color: #FFAB07;color: #ffffff;text-decoration: none;border-radius: 5px;font-weight: bold;transition: background-color 0.3s ease;}}.button:hover {{background-color: #AD7301;}}.footer {{text-align: center;padding: 20px;background-color: #f5f5f5;color: #2f2f2f;font-size: 14px;border-radius: 0 0 8px 8px;}}
+                        </style>
+                   </head>
+    
+                   <body>
+                       <div class=""container"">
+                           <div class=""header"">
+                               <h1>Atualização dos Seus Dados</h1>
+                           </div>
+                           <div class=""content"">
+                               <h2>Olá, {model.Nome}!</h2>
+                               <p>Gostaríamos de informar que seus dados no ListiFy foram atualizados com sucesso. Você pode revisar as mudanças acessando sua conta.</p>
+                               <p>Para verificar as informações atualizadas, clique no botão abaixo:</p>
+                               <p>
+                                   <a href=""[URL de Login]"" class=""button"">Acessar Minha Conta</a>
+                               </p>
+                               <p>Se você não solicitou essa atualização, por favor, entre em contato conosco imediatamente.</p>
+                               <p>Obrigado por continuar utilizando o ListiFy.</p>
+                               <p>Essa é uma mensagem automática, Porfavor não responda.</p>
+                           </div>
+                           <div class=""footer"">
+                               <p>© 2024 ListiFy. Todos os direitos reservados.</p>
+                           </div>
+                       </div>
+                   </body>
+                </html>";
+
+
+                await _emailService.SendEmailAsync(sendEmailRequest.ToEmail, sendEmailRequest.Subject, htmlBody);
+
                 return StatusCode(200, response);
             }
             catch (ApplicationException e)
@@ -148,58 +228,21 @@ namespace Listify.Services.Controllers
             {
                 return StatusCode(500, new { e.Message });
             }
-        }
-
-        [Authorize]
-        [Route("atualizar-email")]
-        [HttpPut]
-        [ProducesResponseType(typeof(AtualizarEmailResponseModel), 200)]
-        public async Task<IActionResult> AtualizarEmail([FromBody] AtualizarEmailRequestModel model)
-        {
-            try
-            {
-                var email = User.Identity.Name;
-
-                var emailAtualizado = new AtualizarEmailRequestModel
-                {
-                    Email = model.Email
-                };
-
-                await _usuarioDomainService.AtualizarEmail(email, emailAtualizado.Email);
-
-                var response = new AtualizarEmailResponseModel
-                {
-                    DataHoraAlteracao = DateTime.Now
-                };
-
-                return StatusCode(200, response);
-            }
-            catch (ApplicationException e)
-            {
-                return StatusCode(400, new { e.Message });
-            }
-            catch (Exception e)
-            {
-                return StatusCode(500, new { e.Message });
-            }
-        }
-
-        [Authorize]
+        }        
+        
         [Route("atualizar-senha")]
         [HttpPut]
         [ProducesResponseType(typeof(AtualizarSenhaResponseModel), 200)]
-        public async Task<IActionResult> AtualizarSenha([FromBody] AtualizarSenhaRequestModel model)
+        public async Task<IActionResult> AtualizarSenha([FromQuery] Guid usuarioID,[FromForm] AtualizarSenhaRequestModel model)
         {
             try
             {
-                var email = User.Identity.Name;
-
                 var senhaAtualizada = new AtualizarSenhaRequestModel
                 {
                     Senha = model.Senha
                 };
 
-                await _usuarioDomainService.AtualizarSenha(email, senhaAtualizada.Senha);
+                await _usuarioDomainService.AtualizarSenha(usuarioID, senhaAtualizada.Senha);
 
                 var response = new AtualizarSenhaResponseModel 
                 {
@@ -216,33 +259,18 @@ namespace Listify.Services.Controllers
             {
                 return StatusCode(500, new { e.Message });
             }
-        }
-
-        [Authorize]
-        [Route("consultar-usuario")]
-        [HttpGet]
-        [ProducesResponseType(typeof(ConsultarUsuarioResponseModel), 200)]
-        public async Task<IActionResult> GetUsuario([FromQuery] ConsultarUsuarioRequestModel model)
+        }               
+        
+        [Route("deletar-usuario")]
+        [HttpDelete]
+        [ProducesResponseType(typeof(string), 200)]
+        public async Task<IActionResult> DeletarUsuario(Guid usuarioID)
         {
             try
-            {
-                var email = User.Identity.Name;
+            {                             
+                await _usuarioDomainService.DeletarUsuario(usuarioID);
 
-                model.Email = email;
-
-                var usuario = await _usuarioDomainService.GetUsuario(model.Email);
-
-                var response = new ConsultarUsuarioResponseModel
-                {
-                    Nome = usuario.Nome,
-                    Sobrenome = usuario.Sobrenome,
-                    Email = usuario.Email,
-                    DataNascimento = usuario.DataNascimento,
-                    Telefone = usuario.Telefone,
-                    FotoPerfil = usuario.FotoPerfil
-                };
-
-                return StatusCode(200, response);
+                return StatusCode(200, new { Message = "Sua conta foi excluida com sucesso." });
             }
             catch (ApplicationException e)
             {
@@ -253,17 +281,26 @@ namespace Listify.Services.Controllers
                 return StatusCode(500, new { e.Message });
             }
         }
-        
-        [Route("deletar-usuario")]
-        [HttpDelete]
-        [ProducesResponseType(typeof(string), 200)]
-        public async Task<IActionResult> DeletarUsuario([FromQuery] Guid usuarioID)
+
+        [Route("usuario")]
+        [HttpGet]
+        [ProducesResponseType(typeof(UsuarioResponseModel), 200)]
+        public async Task<IActionResult> Usuario([FromQuery] Guid usuarioID)
         {
             try
-            {                             
-                await _usuarioDomainService.DeletarUsuario(usuarioID);
+            {                
+                var usuario = await _usuarioDomainService.Usuario(usuarioID);                
 
-                return StatusCode(200, new { Message = "Sua conta foi excluida com sucesso." });
+                var response = new UsuarioResponseModel
+                {
+                    Nome = usuario.Nome,
+                    Sobrenome = usuario.Sobrenome,
+                    Email = usuario.Email,
+                    Telefone = usuario.Telefone,
+                    FotoPerfil = usuario.FotoPerfil
+                };
+
+                return StatusCode(200, response);
             }
             catch (ApplicationException e)
             {

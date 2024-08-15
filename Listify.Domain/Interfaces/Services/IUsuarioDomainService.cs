@@ -14,19 +14,18 @@ namespace Listify.Domain.Interfaces.Services
         Task<Usuario> Autenticar(string email, string senha);
 
         Task<Usuario> AtualizarDados(
-            string? email,
+            Guid? usuarioID,
+            string email,
             string nome,
-            string sobrenome,
+            string sobrenome,            
             string telefone,
             byte[]? fotoPerfil
             );
 
-        Task<Usuario> AtualizarSenha(string? email, string senha);
-
-        Task<Usuario> AtualizarEmail(string? email, string novoEmail);
-
-        Task<Usuario> GetUsuario(string? email);
+        Task<Usuario> AtualizarSenha(Guid? usuarioID, string senha);       
 
         Task DeletarUsuario(Guid usuarioID);
+
+        Task<Usuario> Usuario(Guid usuarioID);
     }
 }

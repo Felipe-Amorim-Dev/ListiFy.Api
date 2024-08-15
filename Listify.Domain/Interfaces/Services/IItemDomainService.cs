@@ -22,7 +22,7 @@ namespace Listify.Domain.Interfaces.Services
             List<ItemFoto> galeria
             );
 
-        Task<Item> DeletarItem(string titulo, Guid usuarioID);
+        Task<Item> DeletarItem(Guid id, Guid usuarioID);
 
         Task<List<Item>> ConsultarItems(Guid usuarioID);
 
@@ -30,6 +30,6 @@ namespace Listify.Domain.Interfaces.Services
 
         Task DeletarFoto(Guid itemId, Guid fotoId);
 
-        Task DeletarFotos(Guid itemId);
+        Task DeletarFotos(Guid itemId);        
     }
 }

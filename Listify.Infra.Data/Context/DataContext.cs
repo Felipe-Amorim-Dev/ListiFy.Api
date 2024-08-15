@@ -13,7 +13,7 @@ namespace Listify.Infra.Data.Context
     {
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=BDListify;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False");
+            optionsBuilder.UseSqlServer("Data Source=SQL5112.site4now.net;Initial Catalog=db_aa26ca_dblistify;User Id=db_aa26ca_dblistify_admin;Password=@Qruxasq1");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

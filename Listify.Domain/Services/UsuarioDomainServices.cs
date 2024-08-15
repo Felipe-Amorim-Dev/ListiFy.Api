@@ -26,9 +26,9 @@ namespace Listify.Domain.Services
             _itemFotoRepository = itemFotoRepository;
         }
 
-        public async Task<Usuario> AtualizarDados(string? email, string nome, string sobrenome, string telefone, byte[]? fotoPerfil)
+        public async Task<Usuario> AtualizarDados(Guid? usuarioID, string nome, string sobrenome, string email, string telefone, byte[]? fotoPerfil)
         {
-            var usuario = await _usuarioRepository?.GetAsync(email);
+            var usuario = await _usuarioRepository?.GetByIdAsync((Guid)usuarioID);
 
             if(usuario == null)
             {
@@ -37,25 +37,31 @@ namespace Listify.Domain.Services
 
             var dadosAtualizados = false;
 
-            if (!string.IsNullOrWhiteSpace(nome))
+            if (!string.IsNullOrWhiteSpace(nome) && usuario.Nome != nome)
             {
                 usuario.Nome = nome;
                 dadosAtualizados = true;
             }
 
-            if (!string.IsNullOrWhiteSpace(sobrenome))
+            if (!string.IsNullOrWhiteSpace(sobrenome) && usuario.Sobrenome != sobrenome)
             {
                 usuario.Sobrenome = sobrenome;
                 dadosAtualizados = true;
             }
 
-            if (!string.IsNullOrWhiteSpace(telefone))
+            if (!string.IsNullOrWhiteSpace(telefone) && usuario.Telefone != telefone)
             {
                 usuario.Telefone = telefone;
                 dadosAtualizados = true;
             }
 
-            if(fotoPerfil != null && fotoPerfil.Length > 0)
+            if (!string.IsNullOrWhiteSpace(email) && usuario.Email != email)
+            {
+                usuario.Email = email;
+                dadosAtualizados = true;
+            }
+
+            if (fotoPerfil != null && !fotoPerfil.SequenceEqual(usuario.FotoPerfil))
             {
                 usuario.FotoPerfil = fotoPerfil;
                 dadosAtualizados = true;
@@ -71,40 +77,11 @@ namespace Listify.Domain.Services
             }
 
             return usuario;
-        }
+        }        
 
-        public async Task<Usuario> AtualizarEmail(string? email, string novoEmail)
+        public async Task<Usuario> AtualizarSenha(Guid? usuarioID, string senha)
         {
-            var usuario = await _usuarioRepository?.GetAsync(email);
-
-            if(usuario == null)
-            {
-                throw new ApplicationException("Usuario não encontrado.");
-            }
-
-            var EmailAtualizado = false;
-
-            if (!string.IsNullOrWhiteSpace(novoEmail))
-            {
-                usuario.Email = novoEmail;
-                EmailAtualizado = true;
-            }
-
-            if (EmailAtualizado)
-            {
-               await _usuarioRepository?.UpdateAsync(usuario);
-            }
-            else
-            {
-                throw new ApplicationException("Email não atualizado.");
-            }
-
-            return usuario;
-        }
-
-        public async Task<Usuario> AtualizarSenha(string? email, string senha)
-        {
-            var usuario = await _usuarioRepository?.GetAsync(email);
+            var usuario = await _usuarioRepository?.GetByIdAsync((Guid)usuarioID);
 
             if(usuario == null)
             {
@@ -125,7 +102,7 @@ namespace Listify.Domain.Services
             }
             else
             {
-                throw new ApplicationException("Senha não foi atualizada.");
+                throw new ApplicationException("A senha não foi atualizada.");
             }
 
             return usuario;
@@ -155,21 +132,7 @@ namespace Listify.Domain.Services
             usuario.Senha = MD5Helper.Encrypt(usuario.Senha);
 
             await _usuarioRepository?.CreateAsync(usuario);            
-        }
-
-        public async Task<Usuario> GetUsuario(string email)
-        {
-            var usuario = await _usuarioRepository?.GetAsync(email);
-
-            var usuarioEmail = usuario.Equals(usuario.Email == email);                 
-
-            if (email == null)
-            {
-                throw new ApplicationException("Usuário não encontrado.");
-            }
-
-            return usuario;
-        }
+        }        
 
         public async Task DeletarUsuario(Guid usuarioID)
         {
@@ -200,6 +163,20 @@ namespace Listify.Domain.Services
                 throw new ApplicationException("Usuário não encontrado.");
             }
             
+        }
+
+        public async Task<Usuario> Usuario(Guid usuarioID)
+        {
+            var usuario = await _usuarioRepository?.GetByIdAsync((Guid)usuarioID);
+
+            if (usuario == null)
+            {
+                throw new ApplicationException("Usuário não encontrado.");
+            }
+            
+            await _usuarioRepository?.UpdateAsync(usuario);
+            
+            return usuario;
         }
     }
 }

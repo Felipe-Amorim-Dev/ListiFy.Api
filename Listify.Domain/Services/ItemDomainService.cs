@@ -89,10 +89,10 @@ namespace Listify.Domain.Services
                 }                                              
         }
 
-        public async Task<Item> DeletarItem(string titulo, Guid usuarioID)
+        public async Task<Item> DeletarItem(Guid id, Guid usuarioID)
         {
             var usuario = await _usuarioRepository?.GetByIdAsync(usuarioID);
-            var item = await _itemRepository?.GetAsync(titulo);
+            var item = await _itemRepository?.GetByIdAsync(id);            
 
             var itemUsuario = item.Equals(item.UsuarioID == usuarioID);
 
@@ -243,6 +243,6 @@ namespace Listify.Domain.Services
             item.Galeria = new List<ItemFoto>();
 
             await _itemRepository.UpdateAsync(item);
-        }
+        }        
     }
 }

@@ -8,9 +8,10 @@ using System.Threading.Tasks;
 namespace Listify.Services.Models.AtualizarSenha
 {
     public class AtualizarSenhaRequestModel
-    {
-        public string? Email { get; set; }        
+    {              
         public string? Senha { get; set; }
+
+        [Compare("Senha", ErrorMessage = "Confirme a senha de usuário.")]
         public string? SenhaConfirmacao { get; set; }
     }
 }

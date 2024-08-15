@@ -33,8 +33,14 @@ namespace Listify.Services.Controllers
         [ProducesResponseType(typeof(CadastrarItemResponseModel), 200)]
         public async Task<IActionResult> CadastrarItem([FromForm] CadastrarItemRequestModel model, Guid usuarioID, List<IFormFile> galeria)
         {
+
             try
-            {                
+            {
+                if (galeria.Count > 5)
+                {
+                    return StatusCode(400, new { Message = "Você pode enviar no máximo 5 fotos." });
+                }
+
                 var item = new Item
                 {
                     UsuarioID = usuarioID,
@@ -131,11 +137,11 @@ namespace Listify.Services.Controllers
         [Route("remover-item")]
         [HttpDelete]
         [ProducesResponseType(typeof(RemoverItemResponseModel), 200)]
-        public async Task<IActionResult> RemoverItem([FromForm] RemoverItemRequestModel model, Guid usuarioID)
+        public async Task<IActionResult> RemoverItem([FromQuery] Guid id, Guid usuarioID)
         {
             try
             {                
-                var response = await _itemDomainService?.DeletarItem(model.Titulo, usuarioID);
+                var response = await _itemDomainService?.DeletarItem(id, usuarioID);
                 return StatusCode(200, response);
             }
             catch (ApplicationException e)
@@ -247,6 +253,6 @@ namespace Listify.Services.Controllers
             {
                 return StatusCode(500, new { e.Message });
             }
-        }
+        }        
     }
 }

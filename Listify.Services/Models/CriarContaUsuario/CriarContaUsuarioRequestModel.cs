@@ -19,19 +19,20 @@ namespace Listify.Services.Models.CriarContaUsuario
         [Required(ErrorMessage = "Informe o email de usuário.")]
         public string? Email { get; set; }
 
-        [Required(ErrorMessage = "Informe a senha de usuário.")]
-        public string? Senha { get; set; }
-
         [Required(ErrorMessage = "Informe a data de nascimento do usuário.")]
-        public DateTime? DataNascimento { get; set; }                
+        public DateTime? DataNascimento { get; set; }
 
-        [Required(ErrorMessage = "Informe o telefone do usuário.")]
         public string? Telefone { get; set; }
 
-        public byte[]? FotoPerfil { get; set; }
+        [Required(ErrorMessage = "Informe a senha de usuário.")]
+        public string? Senha { get; set; }
 
         [Compare("Senha", ErrorMessage = "Confirme a senha de usuário.")]
         [Required(ErrorMessage = "Confirme a senha de usuário.")]
         public string? SenhaConfirmacao { get; set; }
+
+        public byte[]? FotoPerfil { get; set; }
+
+        
     }
 }

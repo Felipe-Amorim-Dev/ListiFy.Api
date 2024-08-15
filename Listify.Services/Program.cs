@@ -1,3 +1,4 @@
+using Listify.Domain.Services;
 using Listify.Domain.Interfaces.Security;
 using Listify.Security.Services;
 using Listify.Security.Settings;
@@ -40,10 +41,22 @@ builder.Services.AddAuthentication(
         }
 );
 
+builder.Services.AddSingleton<SendEmailDomainService>(sp => new SendEmailDomainService(
+    builder.Configuration["Smtp:Server"],
+    int.Parse(builder.Configuration["Smtp:Port"]),
+    builder.Configuration["Smtp:Username"],
+    builder.Configuration["Smtp:Password"]
+));
+
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+
 app.UseCorsConfig();
 app.UseAuthentication();
 app.UseAuthorization();

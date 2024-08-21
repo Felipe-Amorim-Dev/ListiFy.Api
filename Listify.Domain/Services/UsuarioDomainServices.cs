@@ -26,9 +26,9 @@ namespace Listify.Domain.Services
             _itemFotoRepository = itemFotoRepository;
         }
 
-        public async Task<Usuario> AtualizarDados(Guid? usuarioID, string nome, string sobrenome, string email, string telefone, byte[]? fotoPerfil)
+        public async Task<Usuario> AtualizarDados(Guid? usuarioID, string? nome, string? sobrenome, string? email, string? telefone, byte[]? fotoPerfil)
         {
-            var usuario = await _usuarioRepository?.GetByIdAsync((Guid)usuarioID);
+            var usuario = await _usuarioRepository?.GetByIdAsync((Guid)usuarioID);            
 
             if(usuario == null)
             {
@@ -37,37 +37,37 @@ namespace Listify.Domain.Services
 
             var dadosAtualizados = false;
 
-            if (!string.IsNullOrWhiteSpace(nome) && usuario.Nome != nome)
+            if (!string.IsNullOrWhiteSpace(nome) && usuario?.Nome != nome)
             {
                 usuario.Nome = nome;
                 dadosAtualizados = true;
             }
 
-            if (!string.IsNullOrWhiteSpace(sobrenome) && usuario.Sobrenome != sobrenome)
+            if (!string.IsNullOrWhiteSpace(sobrenome) && usuario?.Sobrenome != sobrenome)
             {
                 usuario.Sobrenome = sobrenome;
                 dadosAtualizados = true;
             }
 
-            if (!string.IsNullOrWhiteSpace(telefone) && usuario.Telefone != telefone)
+            if (!string.IsNullOrWhiteSpace(telefone) && usuario?.Telefone != telefone)
             {
                 usuario.Telefone = telefone;
                 dadosAtualizados = true;
             }
 
-            if (!string.IsNullOrWhiteSpace(email) && usuario.Email != email)
+            if (!string.IsNullOrWhiteSpace(email) && usuario?.Email != email)
             {
                 usuario.Email = email;
                 dadosAtualizados = true;
             }
 
-            if (fotoPerfil != null && !fotoPerfil.SequenceEqual(usuario.FotoPerfil))
+            if (fotoPerfil != null && !fotoPerfil.SequenceEqual(usuario?.FotoPerfil))
             {
                 usuario.FotoPerfil = fotoPerfil;
                 dadosAtualizados = true;
             }
 
-            if (dadosAtualizados)
+            if (dadosAtualizados == true)
             {
                await _usuarioRepository?.UpdateAsync(usuario);
             }

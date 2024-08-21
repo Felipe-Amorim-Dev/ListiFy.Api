@@ -15,10 +15,10 @@ namespace Listify.Domain.Interfaces.Services
 
         Task<Usuario> AtualizarDados(
             Guid? usuarioID,
-            string email,
-            string nome,
-            string sobrenome,            
-            string telefone,
+            string? email,
+            string? nome,
+            string? sobrenome,            
+            string? telefone,
             byte[]? fotoPerfil
             );
 

@@ -50,12 +50,14 @@ builder.Services.AddSingleton<SendEmailDomainService>(sp => new SendEmailDomainS
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+/*if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+}*/
 
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseCorsConfig();
 app.UseAuthentication();

@@ -40,7 +40,7 @@ namespace Listify.Domain.Services
 
             using (var client = new SmtpClient())
             {
-                await client.ConnectAsync(_smtpServer, _smtpPort, SecureSocketOptions.StartTls);
+                await client.ConnectAsync(_smtpServer, _smtpPort, SecureSocketOptions.None);
                 await client.AuthenticateAsync(_smtpUsername, _smtpPassword);
                 await client.SendAsync(message);
                 await client.DisconnectAsync(true);

@@ -361,3 +361,25 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# arquivos sensíveis
+appsettings.json
+appsettings.*.json
+!appsettings.Example.json
+
+# publicação
+_publicação/
+_publica#U00e7#U00e3o/
+publish/
+
+# arquivos locais do visual studio
+.vs/
+*.pubxml.user
+*.user
+
+# build
+bin/
+obj/
+
+# git antigo não deve ir em zip/repositório novo
+.git/

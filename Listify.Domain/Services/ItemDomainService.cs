@@ -30,7 +30,7 @@ namespace Listify.Domain.Services
                 {
                     var getItem = await _itemRepository?.GetByIdAsync(itemId);
 
-                    if (getItem != null || getItem.UsuarioID == usuarioID)
+                    if (getItem != null && getItem.UsuarioID == usuarioID)
                     {                        
 
                         var itemAtualizado = false;

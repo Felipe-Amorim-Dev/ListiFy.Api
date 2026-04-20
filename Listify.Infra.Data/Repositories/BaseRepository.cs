@@ -1,5 +1,6 @@
 ﻿using Listify.Domain.Interfaces.Repositories;
 using Listify.Infra.Data.Context;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,49 +10,41 @@ using System.Threading.Tasks;
 namespace Listify.Infra.Data.Repositories
 {
     public class BaseRepository<T> : IBaseRepository<T>
-        where T : class
+       where T : class
     {
-        public virtual async Task CreateAsync(T entity)
+        protected readonly DataContext _context;
+
+        public BaseRepository(DataContext context)
         {
-            using (var context = new DataContext())
-            {
-                context.Add(entity);
-                context.SaveChanges();
-            }
+            _context = context;
         }
 
-        public virtual async Task UpdateAsync(T entity) 
+        public virtual async Task CreateAsync(T entity)
         {
-            using (var context = new DataContext())
-            {
-                context.Update(entity);
-                context.SaveChanges();
-            }
+            _context.Add(entity);
+            await _context.SaveChangesAsync();
+        }
+
+        public virtual async Task UpdateAsync(T entity)
+        {
+            _context.Update(entity);
+            await _context.SaveChangesAsync();
         }
 
         public virtual async Task DeleteAsync(T entity)
         {
-            using (var context = new DataContext())
-            {
-                context.Remove(entity);
-                context.SaveChanges();
-            }
+            _context.Remove(entity);
+            await _context.SaveChangesAsync();
         }
 
         public virtual async Task<List<T>> GetAllAsync()
         {
-            using (var context = new DataContext())
-            {
-                return context.Set<T>().ToList();
-            }
+            return await _context.Set<T>().ToListAsync();
         }
 
         public virtual async Task<T> GetByIdAsync(Guid id)
         {
-            using (var context = new DataContext())
-            {
-                return context.Set<T>().Find(id);
-            }
+            return await _context.Set<T>().FindAsync(id);
         }
     }
 }

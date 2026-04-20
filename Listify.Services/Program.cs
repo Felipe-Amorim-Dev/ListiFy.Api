@@ -1,14 +1,15 @@
-using Listify.Domain.Services;
 using Listify.Domain.Interfaces.Security;
+using Listify.Domain.Services;
+using Listify.Infra.Data.Context;
 using Listify.Security.Services;
 using Listify.Security.Settings;
 using Listify.Services.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 builder.Services.AddControllers();
 builder.Services.AddRouting(map => map.LowercaseUrls = true);
@@ -18,43 +19,48 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDependencyInjection();
 builder.Services.AddCorsConfig();
 
+builder.Services.Configure<TokenSettings>(
+    builder.Configuration.GetSection("Jwt")
+);
+
+var tokenSettings = builder.Configuration
+    .GetSection("Jwt")
+    .Get<TokenSettings>() ?? new TokenSettings();
+
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
+
 builder.Services.AddTransient<ITokenSecurity, TokenSecurity>();
 
-builder.Services.AddAuthentication(
-    auth =>
+builder.Services.AddAuthentication(auth =>
+{
+    auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    auth.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(bearer =>
+{
+    bearer.RequireHttpsMetadata = false;
+    bearer.SaveToken = true;
+    bearer.TokenValidationParameters = new TokenValidationParameters
     {
-        auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        auth.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    }).AddJwtBearer(
-        bearer =>
-        {
-            bearer.RequireHttpsMetadata = false;
-            bearer.SaveToken = true;
-            bearer.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey
-                    (Encoding.ASCII.GetBytes(TokenSettings.SecretKey)),
-                ValidateIssuer = false,
-                ValidateAudience = false
-            };
-        }
-);
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.ASCII.GetBytes(tokenSettings.SecretKey)
+        ),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
+});
 
 builder.Services.AddSingleton<SendEmailDomainService>(sp => new SendEmailDomainService(
     builder.Configuration["Smtp:Server"],
-    int.Parse(builder.Configuration["Smtp:Port"]),
+    int.Parse(builder.Configuration["Smtp:Port"]!),
     builder.Configuration["Smtp:Username"],
     builder.Configuration["Smtp:Password"]
 ));
 
 var app = builder.Build();
-
-/*if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}*/
 
 app.UseSwagger();
 app.UseSwaggerUI();

@@ -1,6 +1,7 @@
 ﻿using Listify.Domain.Entities;
 using Listify.Domain.Interfaces.Repositories;
 using Listify.Infra.Data.Context;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,12 +12,15 @@ namespace Listify.Infra.Data.Repositories
 {
     public class ItemFotoRepository : BaseRepository<ItemFoto>, IItemFotoRepository
     {
+        public ItemFotoRepository(DataContext context) : base(context)
+        {
+        }
+
         public async Task<List<ItemFoto>> GetAsync(Guid itemId)
         {
-            using (var context = new DataContext())
-            {
-                return context.ItemFoto.Where(f => f.ItemId.Equals(itemId)).ToList();
-            }
+            return await _context.ItemFoto
+                .Where(f => f.ItemId.Equals(itemId))
+                .ToListAsync();
         }
     }
 }

@@ -9,22 +9,35 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Listify.Domain.Interfaces.Security;
+using Microsoft.Extensions.Options;
 
 namespace Listify.Security.Services
 {
     public class TokenSecurity : ITokenSecurity
     {
+        private readonly TokenSettings _tokenSettings;
+
+        public TokenSecurity(IOptions<TokenSettings> tokenSettings)
+        {
+            _tokenSettings = tokenSettings.Value;
+        }
+
         public string GenerateToken(Usuario usuario)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(TokenSettings.SecretKey);
+            var key = Encoding.ASCII.GetBytes(_tokenSettings.SecretKey);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.Name, usuario.Email) }),
-                Expires = DateTime.UtcNow.AddMinutes(TokenSettings.ExpirationInMinutes),
-                SigningCredentials = new SigningCredentials
-                    (new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, usuario.Email)
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(_tokenSettings.ExpirationInMinutes),
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256
+                )
             };
 
             var accessToken = tokenHandler.CreateToken(tokenDescriptor);

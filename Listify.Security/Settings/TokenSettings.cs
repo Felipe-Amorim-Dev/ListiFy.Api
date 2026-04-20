@@ -8,7 +8,7 @@ namespace Listify.Security.Settings
 {
     public class TokenSettings
     {
-        public static string SecretKey { get => "5C4F89D5FBA64F6D8ECECF011F55E53F2"; }
-        public static int ExpirationInMinutes { get => 60; }
+        public string SecretKey { get; set; } = string.Empty;
+        public int ExpirationInMinutes { get; set; }
     }
 }

@@ -11,9 +11,13 @@ namespace Listify.Infra.Data.Context
 {
     public class DataContext : DbContext
     {
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        public DataContext()
         {
-            optionsBuilder.UseSqlServer("Data Source=SQL5112.site4now.net;Initial Catalog=db_aa26ca_dblistify;User Id=db_aa26ca_dblistify_admin;Password=@Qruxasq1");
+        }
+
+        public DataContext(DbContextOptions<DataContext> options)
+            : base(options)
+        {
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -1,3 +1,5 @@
+<img src="Docs/Capa-ListiFy_Api.png" width="400px" align="right"/>
+
 # 🚀 Listify API
 
 API REST robusta desenvolvida em .NET, com foco em arquitetura limpa, segurança e escalabilidade, voltada para gerenciamento de usuários, itens e imagens.
@@ -5,6 +7,10 @@ API REST robusta desenvolvida em .NET, com foco em arquitetura limpa, segurança
 ![GitHub repo size](https://img.shields.io/github/repo-size/Felipe-Amorim-Dev/listify?style=for-the-badge)
 ![GitHub stars](https://img.shields.io/github/stars/Felipe-Amorim-Dev/listify?style=for-the-badge)
 ![GitHub forks](https://img.shields.io/github/forks/Felipe-Amorim-Dev/listify?style=for-the-badge)
+
+## Front-End da Aplicação
+
+Front: https://github.com/Felipe-Amorim-Dev/ListiFy.App
 
 ## 📌 Visão Geral
 

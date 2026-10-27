@@ -50,6 +50,30 @@ Swagger: http://localhost:5274/swagger
 
 - [ListiFy.App](https://github.com/Felipe-Amorim-Dev/ListiFy.App) — Interface Angular 16
 
+## 🏗️ Arquitetura e responsabilidades
+
+- Listify.Services — controllers HTTP, modelos de entrada/saída, Swagger e composição de dependências
+- Listify.Domain — entidades Usuario, Item e ItemFoto; interfaces e regras de negócio
+- Listify.Infra.Data — DataContext, mapeamentos EF Core, migrações e repositórios SQL Server
+- Listify.Security — geração de JWT com expiração configurável
+
+### Fluxo de funcionamento
+
+1. Angular → controllers ASP.NET Core → serviços de domínio → repositórios EF Core → SQL Server
+2. Cadastro de itens recebe formulário e até cinco imagens; ItemFoto associa cada imagem ao item.
+3. Autenticação consulta o usuário e utiliza TokenSecurity para emitir o token.
+
+### Execução local
+
+```bash
+dotnet restore Listify.sln
+dotnet build Listify.sln
+cd Listify.Services
+dotnet run --launch-profile http
+```
+
+Endereço do projeto: http://localhost:5274/swagger
+
 <a id="licenca"></a>
 ## 📄 Licença
 

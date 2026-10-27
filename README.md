@@ -1,34 +1,65 @@
-# ListiFy API — .NET backend
+<p align="center"><img src="Docs/Capa-ListiFy_Api.png" alt="Capa do projeto ListiFy.Api" width="100%" /></p>
 
-[![Compilação .NET](https://github.com/Felipe-Amorim-Dev/ListiFy.Api/actions/workflows/ci.yml/badge.svg)](https://github.com/Felipe-Amorim-Dev/ListiFy.Api/actions/workflows/ci.yml)
+<h1 align="center">📚 ListiFy API</h1>
 
-**Segurança:** os artefatos da pasta de publicação foram removidos da versão atual do repositório. Configurações antigas podem permanecer no histórico e exigem revisão e, se válidas, troca de credenciais no provedor.
+<p align="center"><em>API ASP.NET Core para gerenciar coleções pessoais.</em></p>
 
+<p align="center">🇧🇷 Português | 🇺🇸 <a href="README.en.md">English</a></p>
 
-**Portfolio project / Projeto de portfólio.** ASP.NET Core backend supporting the [ListiFy Angular app](https://github.com/Felipe-Amorim-Dev/ListiFy.App). Intended to demonstrate API development, layered separation and relational persistence; not certified production-ready.
+<p align="center"><img src="https://img.shields.io/badge/licen%C3%A7a-MIT-006bed?style=flat-square" alt="MIT" /> <img src="https://img.shields.io/github/last-commit/Felipe-Amorim-Dev/ListiFy.Api?style=flat-square&color=006bed" alt="Last commit" /></p>
 
-## Project layout
-- `Listify.Domain` — domain models and abstractions
-- `Listify.Infra.Data` — persistence
-- `Listify.Security` — security concerns
-- `Listify.Services` — ASP.NET Core API and composition
-- `Listify.sln` — solution
+<p align="center"><a href="#sobre">Sobre</a> • <a href="#tecnologias">Tecnologias</a> • <a href="#como-rodar">Como rodar</a> • <a href="#licenca">Licença</a> • <a href="#autor">Autor</a></p>
 
-The repository describes JWT authentication and SQL Server integration; validate their actual behavior and all configuration before deploying.
+---
 
-## Local setup
+<a id="sobre"></a>
+## 📖 Sobre
+
+Back-end para cadastro de usuários e itens de coleções, autenticação JWT, fotos e persistência relacional com Entity Framework Core e SQL Server.
+
+## ✨ Funcionalidades
+
+- Cadastro e autenticação de usuários
+- Cadastro, consulta, edição e exclusão de itens
+- Galeria de fotos dos itens
+- Integração SMTP no cadastro
+
+## 🛠️ Tecnologias
+
+![C#](https://img.shields.io/badge/C%23-006bed?style=for-the-badge) ![.NET 8](https://img.shields.io/badge/.NET_8-006bed?style=for-the-badge) ![SQL Server](https://img.shields.io/badge/SQL_Server-006bed?style=for-the-badge) ![EF Core 8.0.6](https://img.shields.io/badge/EF_Core_8.0.6-006bed?style=for-the-badge) ![JWT](https://img.shields.io/badge/JWT-006bed?style=for-the-badge) ![Swagger](https://img.shields.io/badge/Swagger-006bed?style=for-the-badge)
+
+## 📦 Pré-requisitos
+
+SDK .NET 8 e SQL Server. Configure localmente conexão com o banco, JWT e SMTP.
+
+<a id="como-rodar"></a>
+## 🚀 Como rodar
+
 ```bash
 git clone https://github.com/Felipe-Amorim-Dev/ListiFy.Api.git
 cd ListiFy.Api
 dotnet restore Listify.sln
 dotnet build Listify.sln
+cd Listify.Services
+dotnet run --launch-profile http
 ```
-Configure SQL Server connectivity and relevant JWT/SMTP settings through local configuration or a secret manager. Review existing appsettings and migration setup before trying to launch the API. If using Entity Framework migrations, ensure your selected startup project and connection are correct.
 
-## End-to-end application
-Run the [Angular frontend](https://github.com/Felipe-Amorim-Dev/ListiFy.App) separately and configure its API base URL. Validate authentication, collection CRUD and image handling against a local dataset.
+Swagger: http://localhost:5274/swagger
 
-## Current verification status
-The existence of project layers or documented features does not establish passing tests, coverage, load performance or security hardening. Build, integration testing and secret review remain necessary before promoting the project as production-ready.
+## 🔗 Repositórios relacionados
 
-**PT-BR:** API em .NET do projeto ListiFy; integra-se ao frontend Angular. Comandos de build documentados, mas a validação de ponta a ponta e de segurança continua necessária.
+- [ListiFy.App](https://github.com/Felipe-Amorim-Dev/ListiFy.App) — Interface Angular 16
+
+<a id="licenca"></a>
+## 📄 Licença
+
+Distribuído sob a [licença MIT](LICENSE).
+
+<a id="autor"></a>
+## 👤 Autor
+
+**Felipe Figueiredo Amorim** — Desenvolvedor Full Stack.
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Felipe%20Amorim-0A66C2?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/felipe-amorim-dev/) [![E-mail](https://img.shields.io/badge/E--mail-contato-006bed?style=for-the-badge)](mailto:felipe.f.amorim@outlook.com)
+
+<p align="center"><strong>Obrigado por visitar! / Thanks for visiting!</strong></p>

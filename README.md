@@ -1,5 +1,10 @@
 # ListiFy API — .NET backend
 
+[![Compilação .NET](https://github.com/Felipe-Amorim-Dev/ListiFy.Api/actions/workflows/ci.yml/badge.svg)](https://github.com/Felipe-Amorim-Dev/ListiFy.Api/actions/workflows/ci.yml)
+
+**Segurança:** os artefatos da pasta de publicação foram removidos da versão atual do repositório. Configurações antigas podem permanecer no histórico e exigem revisão e, se válidas, troca de credenciais no provedor.
+
+
 **Portfolio project / Projeto de portfólio.** ASP.NET Core backend supporting the [ListiFy Angular app](https://github.com/Felipe-Amorim-Dev/ListiFy.App). Intended to demonstrate API development, layered separation and relational persistence; not certified production-ready.
 
 ## Project layout
